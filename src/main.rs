@@ -114,16 +114,16 @@ unsafe fn WinMain()
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    let mut device: ID3D11Device1 = baseDevice.cast().unwrap();
-    let mut deviceContext: ID3D11DeviceContext1 = baseDeviceContext.cast().unwrap();
+    let device: ID3D11Device1 = baseDevice.cast().unwrap();
+    let deviceContext: ID3D11DeviceContext1 = baseDeviceContext.cast().unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    let mut dxgiDevice: IDXGIDevice1 = device.cast().unwrap();
+    let dxgiDevice: IDXGIDevice1 = device.cast().unwrap();
 
-    let mut dxgiAdapter = dxgiDevice.GetAdapter().unwrap();
+    let dxgiAdapter = dxgiDevice.GetAdapter().unwrap();
 
-    let mut dxgiFactory: IDXGIFactory2 = dxgiAdapter.GetParent().unwrap();
+    let dxgiFactory: IDXGIFactory2 = dxgiAdapter.GetParent().unwrap();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -347,8 +347,8 @@ unsafe fn WinMain()
     let f: f32 = 1000000.0;                                 // far
 
     let mut modelRotation= float3    ::new(0.0, 0.0, 0.0 );
-    let mut modelScale= float3       ::new( 400.0, 400.0, 400.0 );
-    let mut modelTranslation= float3::new( 0.0, 0.0, 1500.0 );
+    let modelScale= float3       ::new( 400.0, 400.0, 400.0 );
+    let modelTranslation= float3::new( 0.0, 0.0, 1500.0 );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -370,9 +370,9 @@ unsafe fn WinMain()
         }
         ///////////////////////////////////////////////////////////////////////////////////////////
 
-        let rotateX = matrix::new( 1., 0., 0., 0., 0., (cos(modelRotation.x)), -(sin(modelRotation.x)), 0., 0., (sin(modelRotation.x)), (cos(modelRotation.x)), 0., 0., 0., 0., 1. );
-        let rotateY = matrix::new( (cos(modelRotation.y)), 0., (sin(modelRotation.y)), 0., 0., 1., 0., 0., -(sin(modelRotation.y)), 0., (cos(modelRotation.y)), 0., 0., 0., 0., 1. );
-        let rotateZ   = matrix::new((cos(modelRotation.z)), -(sin(modelRotation.z)), 0., 0., (sin(modelRotation.z)), (cos(modelRotation.z)), 0., 0., 0., 0., 1., 0., 0., 0., 0., 1. );
+        let rotateX = matrix::new( 1., 0., 0., 0., 0., cos(modelRotation.x), -(sin(modelRotation.x)), 0., 0., sin(modelRotation.x), cos(modelRotation.x), 0., 0., 0., 0., 1. );
+        let rotateY = matrix::new( cos(modelRotation.y), 0., sin(modelRotation.y), 0., 0., 1., 0., 0., -(sin(modelRotation.y)), 0., cos(modelRotation.y), 0., 0., 0., 0., 1. );
+        let rotateZ   = matrix::new(cos(modelRotation.z), -(sin(modelRotation.z)), 0., 0., sin(modelRotation.z), cos(modelRotation.z), 0., 0., 0., 0., 1., 0., 0., 0., 0., 1. );
         let scale     = matrix::new(modelScale.x, 0., 0., 0., 0., modelScale.y, 0., 0., 0., 0., modelScale.z, 0., 0., 0., 0., 1. );
         let translate = matrix::new( 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., modelTranslation.x, modelTranslation.y, modelTranslation.z, 1. );
 
