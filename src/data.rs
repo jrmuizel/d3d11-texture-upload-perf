@@ -1,13 +1,13 @@
 pub const TEXTURE_WIDTH: u32 = 2;
 pub const TEXTURE_HEIGHT: u32 = 2;
 
-pub const TextureData: [u32; 4] =
+pub const TEXTURE_DATA: [u32; 4] =
 [
     0xffffffff, 0xff7f7f7f,
     0xff7f7f7f, 0xffffffff,
 ];
 
-pub const VertexData: [f32; 1848] = // float3 position, float3 normal, float2 texcoord, float3 color
+pub const VERTEX_DATA: [f32; 1848] = // float3 position, float3 normal, float2 texcoord, float3 color
 [
     -1.0,  1.0, -1.0,  0.0,  0.0, -1.0,  0.0,  0.0,  0.973,  0.480,  0.002,
     -0.6,  1.0, -1.0,  0.0,  0.0, -1.0,  2.0,  0.0,  0.973,  0.480,  0.002,
@@ -179,7 +179,7 @@ pub const VertexData: [f32; 1848] = // float3 position, float3 normal, float2 te
      0.6, -1.0,  0.6,  0.0,  0.0, -1.0,  0.0,  0.0,  0.001,  0.447,  0.067,
 ];
 
-pub const IndexData: [u32; 288] =
+pub const INDEX_DATA: [u32; 288] =
 [
       0,   1,   9,   9,   8,   0,   1,   2,   5,   5,   4,   1,   6,   7,  10,  10,   9,   6,   2,   3,  11,  11,  10,   2,
      12,  13,  21,  21,  20,  12,  13,  14,  17,  17,  16,  13,  18,  19,  22,  22,  21,  18,  14,  15,  23,  23,  22,  14,

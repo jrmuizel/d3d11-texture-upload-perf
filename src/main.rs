@@ -5,7 +5,7 @@ use windows::{Win32::{Foundation::{BOOL, HWND, LPARAM, LRESULT, PSTR, WPARAM}, G
 mod data;
 use data::*;
 fn main() {
-    unsafe  {WinMain();}
+    unsafe  {win_main();}
 }
 
 /*
@@ -36,14 +36,14 @@ struct matrix { float m[4][4]; };
 matrix operator*(matrix& m1, matrix& m2);
 */
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-struct float3 {  x: f32, y: f32, z: f32 }
+struct Float3 {  x: f32, y: f32, z: f32 }
 
-impl float3 {
+impl Float3 {
     fn new(x: f32, y: f32, z: f32) -> Self { Self { x, y, z }} 
 }
-struct matrix { m: [[f32; 4]; 4] }
+struct Matrix { m: [[f32; 4]; 4] }
 
-impl matrix {
+impl Matrix {
     fn new(
         a00: f32,
         a01: f32,
@@ -74,7 +74,7 @@ extern "system" fn wndproc(window: HWND, message: u32, wparam: WPARAM, lparam: L
 }
 
 //matrix operator*(matrix& m1, matrix& m2);
-unsafe fn WinMain()
+unsafe fn win_main()
 {
     /*WNDCLASSEX wndClassEx = { sizeof(wndClassEx) };
     wndClassEx.lpfnWndProc   = DefWindowProcA;
@@ -108,29 +108,29 @@ unsafe fn WinMain()
     let mut baseDeviceContext = None;
 
     D3D11CreateDevice(None, D3D_DRIVER_TYPE_HARDWARE, None, D3D11_CREATE_DEVICE_BGRA_SUPPORT, &feature_levels, 1, D3D11_SDK_VERSION, &mut baseDevice, null_mut(), &mut baseDeviceContext);
-    let baseDevice = baseDevice.unwrap();
-    let baseDeviceContext = baseDeviceContext.unwrap();
+    let base_device = baseDevice.unwrap();
+    let base_device_context = baseDeviceContext.unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    let device: ID3D11Device1 = baseDevice.cast().unwrap();
-    let deviceContext: ID3D11DeviceContext1 = baseDeviceContext.cast().unwrap();
+    let device: ID3D11Device1 = base_device.cast().unwrap();
+    let device_context: ID3D11DeviceContext1 = base_device_context.cast().unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    let dxgiDevice: IDXGIDevice1 = device.cast().unwrap();
+    let dxgi_device: IDXGIDevice1 = device.cast().unwrap();
 
-    let dxgiAdapter = dxgiDevice.GetAdapter().unwrap();
+    let dxgi_adapter = dxgi_device.GetAdapter().unwrap();
 
-    let dxgiFactory: IDXGIFactory2 = dxgiAdapter.GetParent().unwrap();
+    let dxgi_factory: IDXGIFactory2 = dxgi_adapter.GetParent().unwrap();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
-    let swapChainDesc = DXGI_SWAP_CHAIN_DESC1 {
+    let swap_chain_desc = DXGI_SWAP_CHAIN_DESC1 {
         BufferCount: 2,
         Width: 0, // use window width
         Height: 0, // use window height
@@ -146,46 +146,46 @@ unsafe fn WinMain()
 
 
 
-    let swapChain = dxgiFactory.CreateSwapChainForHwnd(&device, window, &swapChainDesc, std::ptr::null(), None).unwrap();
+    let swap_chain = dxgi_factory.CreateSwapChainForHwnd(&device, window, &swap_chain_desc, std::ptr::null(), None).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
-    let frameBuffer: ID3D11Texture2D = swapChain.GetBuffer(0).unwrap();
+    let frame_buffer: ID3D11Texture2D = swap_chain.GetBuffer(0).unwrap();
 
 
-    let frameBufferView = device.CreateRenderTargetView(&frameBuffer, null_mut()).unwrap();
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    let mut depthBufferDesc = Default::default();
-
-    frameBuffer.GetDesc(&mut depthBufferDesc); // base on framebuffer properties
-
-    depthBufferDesc.Format    = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-
-
-
-    let depthBuffer = device.CreateTexture2D(&depthBufferDesc, null_mut()).unwrap();
-    let depthBufferView = device.CreateDepthStencilView(depthBuffer, null_mut()).unwrap();
+    let frame_buffer_view = device.CreateRenderTargetView(&frame_buffer, null_mut()).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    let mut vsBlob = None;
+    let mut depth_buffer_desc = Default::default();
+
+    frame_buffer.GetDesc(&mut depth_buffer_desc); // base on framebuffer properties
+
+    depth_buffer_desc.Format    = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depth_buffer_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+
+
+    let depth_buffer = device.CreateTexture2D(&depth_buffer_desc, null_mut()).unwrap();
+    let depth_buffer_view = device.CreateDepthStencilView(depth_buffer, null_mut()).unwrap();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    let mut vs_blob = None;
     let mut errors = None;
 
-    D3DCompileFromFile("shaders.hlsl", null_mut(), None, "vs_main", "vs_5_0", 0, 0, &mut vsBlob, &mut errors);
+    D3DCompileFromFile("shaders.hlsl", null_mut(), None, "vs_main", "vs_5_0", 0, 0, &mut vs_blob, &mut errors);
     if let Some(errors) = errors {
         println!("Failed to compile");
         panic!("{}", CString::from_raw(errors.GetBufferPointer() as *mut _ ).into_string().unwrap());
     }
-    let vsBlob = vsBlob.unwrap();
+    let vs_blob = vs_blob.unwrap();
 
-    let vertexShader = device.CreateVertexShader(vsBlob.GetBufferPointer(), vsBlob.GetBufferSize(), None).unwrap();
+    let vertex_shader = device.CreateVertexShader(vs_blob.GetBufferPointer(), vs_blob.GetBufferSize(), None).unwrap();
 
-    let inputElementDesc: [D3D11_INPUT_ELEMENT_DESC; 4]= [// float3 position, float3 normal, float2 texcoord, float3 color
+    let input_element_desc: [D3D11_INPUT_ELEMENT_DESC; 4]= [// float3 position, float3 normal, float2 texcoord, float3 color
     D3D11_INPUT_ELEMENT_DESC {
         SemanticName: PSTR(b"POS\0".as_ptr() as _),
         SemanticIndex: 0,
@@ -231,7 +231,7 @@ unsafe fn WinMain()
     };*/
 
 
-    let inputLayout = device.CreateInputLayout(inputElementDesc.as_ptr(), inputElementDesc.len() as u32, vsBlob.GetBufferPointer(), vsBlob.GetBufferSize()).unwrap();
+    let inputLayout = device.CreateInputLayout(input_element_desc.as_ptr(), input_element_desc.len() as u32, vs_blob.GetBufferPointer(), vs_blob.GetBufferSize()).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -256,7 +256,7 @@ unsafe fn WinMain()
     rasterizerDesc.CullMode = D3D11_CULL_BACK;
 
 
-    let rasterizerState = device.CreateRasterizerState1(&rasterizerDesc).unwrap();
+    let rasterizer_state = device.CreateRasterizerState1(&rasterizerDesc).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -268,7 +268,7 @@ unsafe fn WinMain()
     samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
 
 
-    let samplerState = device.CreateSamplerState(&samplerDesc).unwrap();
+    let sampler_state = device.CreateSamplerState(&samplerDesc).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -277,78 +277,78 @@ unsafe fn WinMain()
     depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
     depthStencilDesc.DepthFunc      = D3D11_COMPARISON_LESS;
 
-    let depthStencilState = device.CreateDepthStencilState(&depthStencilDesc).unwrap();
+    let depth_stencil_state = device.CreateDepthStencilState(&depthStencilDesc).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     struct Constants
     {
-        Transform: matrix,
-        Projection: matrix,
-        LightVector: float3,
+        Transform: Matrix,
+        Projection: Matrix,
+        LightVector: Float3,
     }
 
-    let mut constantBufferDesc: D3D11_BUFFER_DESC = Default::default();
-    constantBufferDesc.ByteWidth      = (std::mem::size_of::<Constants>() + 0xf & 0xfffffff0) as u32;
-    constantBufferDesc.Usage          = D3D11_USAGE_DYNAMIC;
-    constantBufferDesc.BindFlags      = D3D11_BIND_CONSTANT_BUFFER.0;
-    constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE.0;
+    let mut constant_buffer_desc: D3D11_BUFFER_DESC = Default::default();
+    constant_buffer_desc.ByteWidth      = (std::mem::size_of::<Constants>() + 0xf & 0xfffffff0) as u32;
+    constant_buffer_desc.Usage          = D3D11_USAGE_DYNAMIC;
+    constant_buffer_desc.BindFlags      = D3D11_BIND_CONSTANT_BUFFER.0;
+    constant_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE.0;
 
-    let constantBuffer = device.CreateBuffer(&constantBufferDesc, null_mut()).unwrap();
+    let constant_buffer = device.CreateBuffer(&constant_buffer_desc, null_mut()).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     let mut vertexBufferDesc: D3D11_BUFFER_DESC = Default::default();
-    vertexBufferDesc.ByteWidth = std::mem::size_of_val(&VertexData) as u32;
+    vertexBufferDesc.ByteWidth = std::mem::size_of_val(&VERTEX_DATA) as u32;
     vertexBufferDesc.Usage     = D3D11_USAGE_IMMUTABLE;
     vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER.0;
 
-    let vertexData = D3D11_SUBRESOURCE_DATA{ pSysMem: VertexData.as_mut_ptr() as *mut _, ..Default::default() };
+    let vertex_data = D3D11_SUBRESOURCE_DATA{ pSysMem: VERTEX_DATA.as_ptr() as *mut _, ..Default::default() };
 
 
-    let vertexBuffer = device.CreateBuffer(&vertexBufferDesc, &vertexData).unwrap();
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    let mut indexBufferDesc: D3D11_BUFFER_DESC = Default::default();
-    indexBufferDesc.ByteWidth = std::mem::size_of_val(&IndexData) as u32;
-    indexBufferDesc.Usage     = D3D11_USAGE_IMMUTABLE;
-    indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER.0;
-
-    let indexData = D3D11_SUBRESOURCE_DATA{ pSysMem: IndexData.as_mut_ptr() as *mut _, ..Default::default() };
-
-    let indexBuffer = device.CreateBuffer(&indexBufferDesc, &indexData).unwrap();
+    let vertex_buffer = device.CreateBuffer(&vertexBufferDesc, &vertex_data).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    let mut textureDesc: D3D11_TEXTURE2D_DESC = Default::default();
-    textureDesc.Width              = TEXTURE_WIDTH;  // in data.h
-    textureDesc.Height             = TEXTURE_HEIGHT; // in data.h
-    textureDesc.MipLevels          = 1;
-    textureDesc.ArraySize          = 1;
-    textureDesc.Format             = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-    textureDesc.SampleDesc.Count   = 1;
-    textureDesc.Usage              = D3D11_USAGE_IMMUTABLE;
-    textureDesc.BindFlags          = D3D11_BIND_SHADER_RESOURCE;
+    let mut index_buffer_desc: D3D11_BUFFER_DESC = Default::default();
+    index_buffer_desc.ByteWidth = std::mem::size_of_val(&INDEX_DATA) as u32;
+    index_buffer_desc.Usage     = D3D11_USAGE_IMMUTABLE;
+    index_buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER.0;
 
-    let mut textureData: D3D11_SUBRESOURCE_DATA = Default::default();
-    textureData.pSysMem            = TextureData.as_mut_ptr() as *mut _;
-    textureData.SysMemPitch        = TEXTURE_WIDTH * 4; // 4 bytes per pixel
+    let index_data = D3D11_SUBRESOURCE_DATA{ pSysMem: INDEX_DATA.as_ptr() as *mut _, ..Default::default() };
 
-    let texture = device.CreateTexture2D(&textureDesc, &textureData).unwrap();
-
-    let textureView = device.CreateShaderResourceView(texture, null_mut()).unwrap();
+    let index_buffer = device.CreateBuffer(&index_buffer_desc, &index_data).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    let w: f32 = depthBufferDesc.Width as f32;  // width
-    let h: f32 = depthBufferDesc.Height as f32; // height
+    let mut texture_desc: D3D11_TEXTURE2D_DESC = Default::default();
+    texture_desc.Width              = TEXTURE_WIDTH;  // in data.h
+    texture_desc.Height             = TEXTURE_HEIGHT; // in data.h
+    texture_desc.MipLevels          = 1;
+    texture_desc.ArraySize          = 1;
+    texture_desc.Format             = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    texture_desc.SampleDesc.Count   = 1;
+    texture_desc.Usage              = D3D11_USAGE_IMMUTABLE;
+    texture_desc.BindFlags          = D3D11_BIND_SHADER_RESOURCE;
+
+    let mut texture_data: D3D11_SUBRESOURCE_DATA = Default::default();
+    texture_data.pSysMem            = TEXTURE_DATA.as_mut_ptr() as *mut _;
+    texture_data.SysMemPitch        = TEXTURE_WIDTH * 4; // 4 bytes per pixel
+
+    let texture = device.CreateTexture2D(&texture_desc, &texture_data).unwrap();
+
+    let texture_view = device.CreateShaderResourceView(texture, null_mut()).unwrap();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    let w: f32 = depth_buffer_desc.Width as f32;  // width
+    let h: f32 = depth_buffer_desc.Height as f32; // height
     let n: f32 = 1000.0;                                    // near
     let f: f32 = 1000000.0;                                 // far
 
-    let mut modelRotation= float3    ::new(0.0, 0.0, 0.0 );
-    let modelScale= float3       ::new( 400.0, 400.0, 400.0 );
-    let modelTranslation= float3::new( 0.0, 0.0, 1500.0 );
+    let mut model_rotation= Float3    ::new(0.0, 0.0, 0.0 );
+    let model_scale= Float3       ::new( 400.0, 400.0, 400.0 );
+    let model_translation= Float3::new( 0.0, 0.0, 1500.0 );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -370,33 +370,33 @@ unsafe fn WinMain()
         }
         ///////////////////////////////////////////////////////////////////////////////////////////
 
-        let rotateX = matrix::new( 1., 0., 0., 0., 0., cos(modelRotation.x), -(sin(modelRotation.x)), 0., 0., sin(modelRotation.x), cos(modelRotation.x), 0., 0., 0., 0., 1. );
-        let rotateY = matrix::new( cos(modelRotation.y), 0., sin(modelRotation.y), 0., 0., 1., 0., 0., -(sin(modelRotation.y)), 0., cos(modelRotation.y), 0., 0., 0., 0., 1. );
-        let rotateZ   = matrix::new(cos(modelRotation.z), -(sin(modelRotation.z)), 0., 0., sin(modelRotation.z), cos(modelRotation.z), 0., 0., 0., 0., 1., 0., 0., 0., 0., 1. );
-        let scale     = matrix::new(modelScale.x, 0., 0., 0., 0., modelScale.y, 0., 0., 0., 0., modelScale.z, 0., 0., 0., 0., 1. );
-        let translate = matrix::new( 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., modelTranslation.x, modelTranslation.y, modelTranslation.z, 1. );
+        let rotate_x = Matrix::new( 1., 0., 0., 0., 0., cos(model_rotation.x), -(sin(model_rotation.x)), 0., 0., sin(model_rotation.x), cos(model_rotation.x), 0., 0., 0., 0., 1. );
+        let rotate_y = Matrix::new( cos(model_rotation.y), 0., sin(model_rotation.y), 0., 0., 1., 0., 0., -(sin(model_rotation.y)), 0., cos(model_rotation.y), 0., 0., 0., 0., 1. );
+        let rotate_z   = Matrix::new(cos(model_rotation.z), -(sin(model_rotation.z)), 0., 0., sin(model_rotation.z), cos(model_rotation.z), 0., 0., 0., 0., 1., 0., 0., 0., 0., 1. );
+        let scale     = Matrix::new(model_scale.x, 0., 0., 0., 0., model_scale.y, 0., 0., 0., 0., model_scale.z, 0., 0., 0., 0., 1. );
+        let translate = Matrix::new( 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., model_translation.x, model_translation.y, model_translation.z, 1. );
 
-        modelRotation.x += 0.005;
-        modelRotation.y += 0.009;
-        modelRotation.z += 0.001;
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-        let mappedSubresource = deviceContext.Map(&constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0).unwrap();
-
-        let constants = (mappedSubresource.pData as *mut Constants).as_mut().unwrap();
-
-        constants.Transform   = rotateX * rotateY * rotateZ * scale * translate;
-        constants.Projection  = matrix::new( 2. * n / w, 0., 0., 0., 0., 2. * n / h, 0., 0., 0., 0., f / (f - n), 1., 0., 0., n * f / (n - f), 0. );
-        constants.LightVector = float3::new(1.0, -1.0, 1.0 );
-
-        deviceContext.Unmap(&constantBuffer, 0);
+        model_rotation.x += 0.005;
+        model_rotation.y += 0.009;
+        model_rotation.z += 0.001;
 
         ///////////////////////////////////////////////////////////////////////////////////////////
 
-        let backgroundColor: [f32; 4] = [ 0.025, 0.025, 0.025, 1.0];
+
+
+        let mapped_subresource = device_context.Map(&constant_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0).unwrap();
+
+        let constants = (mapped_subresource.pData as *mut Constants).as_mut().unwrap();
+
+        constants.Transform   = rotate_x * rotate_y * rotate_z * scale * translate;
+        constants.Projection  = Matrix::new( 2. * n / w, 0., 0., 0., 0., 2. * n / h, 0., 0., 0., 0., f / (f - n), 1., 0., 0., n * f / (n - f), 0. );
+        constants.LightVector = Float3::new(1.0, -1.0, 1.0 );
+
+        device_context.Unmap(&constant_buffer, 0);
+
+        ///////////////////////////////////////////////////////////////////////////////////////////
+
+        let background_color: [f32; 4] = [ 0.025, 0.025, 0.025, 1.0];
 
         let stride = 11 * 4; // vertex size (11 floats: float3 position, float3 normal, float2 texcoord, float3 color)
         let offset = 0;
@@ -405,45 +405,45 @@ unsafe fn WinMain()
 
         ///////////////////////////////////////////////////////////////////////////////////////////
 
-        deviceContext.ClearRenderTargetView(&frameBufferView, backgroundColor.as_ptr());
-        deviceContext.ClearDepthStencilView(&depthBufferView, D3D11_CLEAR_DEPTH.0 as u32, 1.0, 0);
+        device_context.ClearRenderTargetView(&frame_buffer_view, background_color.as_ptr());
+        device_context.ClearDepthStencilView(&depth_buffer_view, D3D11_CLEAR_DEPTH.0 as u32, 1.0, 0);
 
-        deviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        deviceContext.IASetInputLayout(&inputLayout);
-        deviceContext.IASetVertexBuffers(0, 1, &Some(vertexBuffer.clone()), &stride, &offset);
-        deviceContext.IASetIndexBuffer(&indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+        device_context.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        device_context.IASetInputLayout(&inputLayout);
+        device_context.IASetVertexBuffers(0, 1, &Some(vertex_buffer.clone()), &stride, &offset);
+        device_context.IASetIndexBuffer(&index_buffer, DXGI_FORMAT_R32_UINT, 0);
 
-        deviceContext.VSSetShader(&vertexShader, null_mut(), 0);
-        deviceContext.VSSetConstantBuffers(0, 1, &Some(constantBuffer.clone()));
+        device_context.VSSetShader(&vertex_shader, null_mut(), 0);
+        device_context.VSSetConstantBuffers(0, 1, &Some(constant_buffer.clone()));
 
-        deviceContext.RSSetViewports(1, &viewport);
-        deviceContext.RSSetState(&rasterizerState);
+        device_context.RSSetViewports(1, &viewport);
+        device_context.RSSetState(&rasterizer_state);
 
-        deviceContext.PSSetShader(&pixelShader, null_mut(), 0);
-        deviceContext.PSSetShaderResources(0, 1, &Some(textureView.clone()));
-        deviceContext.PSSetSamplers(0, 1, &Some(samplerState.clone()));
+        device_context.PSSetShader(&pixelShader, null_mut(), 0);
+        device_context.PSSetShaderResources(0, 1, &Some(texture_view.clone()));
+        device_context.PSSetSamplers(0, 1, &Some(sampler_state.clone()));
 
-        deviceContext.OMSetRenderTargets(1, &Some(frameBufferView.clone()), &depthBufferView);
-        deviceContext.OMSetDepthStencilState(&depthStencilState, 0);
-        deviceContext.OMSetBlendState(None, null_mut(), 0xffffffff); // use default blend mode (i.e. disable)
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-
-        deviceContext.DrawIndexed(IndexData.len() as u32, 0, 0);
+        device_context.OMSetRenderTargets(1, &Some(frame_buffer_view.clone()), &depth_buffer_view);
+        device_context.OMSetDepthStencilState(&depth_stencil_state, 0);
+        device_context.OMSetBlendState(None, null_mut(), 0xffffffff); // use default blend mode (i.e. disable)
 
         ///////////////////////////////////////////////////////////////////////////////////////////
 
-        swapChain.Present(1, 0);
+        device_context.DrawIndexed(INDEX_DATA.len() as u32, 0, 0);
+
+        ///////////////////////////////////////////////////////////////////////////////////////////
+
+        swap_chain.Present(1, 0);
     }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-impl Mul for matrix {
-    type Output = matrix;
-fn mul(self, m2: matrix) -> Self::Output
+impl Mul for Matrix {
+    type Output = Matrix;
+fn mul(self, m2: Matrix) -> Self::Output
 {
     let m1 = self;
-    return matrix::new(
+    return Matrix::new(
     
         m1.m[0][0] * m2.m[0][0] + m1.m[0][1] * m2.m[1][0] + m1.m[0][2] * m2.m[2][0] + m1.m[0][3] * m2.m[3][0],
         m1.m[0][0] * m2.m[0][1] + m1.m[0][1] * m2.m[1][1] + m1.m[0][2] * m2.m[2][1] + m1.m[0][3] * m2.m[3][1],
