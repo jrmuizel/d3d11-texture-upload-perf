@@ -332,7 +332,7 @@ unsafe fn win_main()
     texture_desc.BindFlags          = D3D11_BIND_SHADER_RESOURCE;
 
     let mut texture_data: D3D11_SUBRESOURCE_DATA = Default::default();
-    texture_data.pSysMem            = TEXTURE_DATA.as_mut_ptr() as *mut _;
+    texture_data.pSysMem            = TEXTURE_DATA.as_ptr() as *mut _;
     texture_data.SysMemPitch        = TEXTURE_WIDTH * 4; // 4 bytes per pixel
 
     let texture = device.CreateTexture2D(&texture_desc, &texture_data).unwrap();
