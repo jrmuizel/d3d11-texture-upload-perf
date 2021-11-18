@@ -1,4 +1,4 @@
-use std::{ops::Mul, ptr::null_mut};
+use std::{ffi::CString, ops::Mul, ptr::null_mut};
 
 use windows::{Win32::{Foundation::{BOOL, HWND, LPARAM, LRESULT, PSTR, WPARAM}, Graphics::{Direct3D::{*, Fxc::D3DCompileFromFile}, Direct3D11::*, Dxgi::{*, Common::*}}, System::LibraryLoader::GetModuleHandleA, UI::WindowsAndMessaging::*}, core::Interface};
 
@@ -176,10 +176,10 @@ unsafe fn WinMain()
     let mut vsBlob = None;
     let mut errors = None;
 
-    D3DCompileFromFile("shaders.hlsl", null_mut(), None, "vs_main", "vs_5_0", 0, 0, &mut vsBlob, &mut errors).unwrap();
+    D3DCompileFromFile("shaders.hlsl", null_mut(), None, "vs_main", "vs_5_0", 0, 0, &mut vsBlob, &mut errors);
     if let Some(errors) = errors {
         println!("Failed to compile");
-        panic!("{:?}", PSTR(errors.GetBufferPointer() as *mut _ ));
+        panic!("{}", CString::from_raw(errors.GetBufferPointer() as *mut _ ).into_string().unwrap());
     }
     let vsBlob = vsBlob.unwrap();
 
@@ -198,7 +198,7 @@ unsafe fn WinMain()
     D3D11_INPUT_ELEMENT_DESC {
         SemanticName: PSTR(b"NOR\0".as_ptr() as _),
         SemanticIndex: 0,
-        Format: DXGI_FORMAT_R32G32B32A32_FLOAT,
+        Format: DXGI_FORMAT_R32G32B32_FLOAT,
         InputSlot: 0,
         AlignedByteOffset: D3D11_APPEND_ALIGNED_ELEMENT,
         InputSlotClass: D3D11_INPUT_PER_VERTEX_DATA,
@@ -216,7 +216,7 @@ unsafe fn WinMain()
     D3D11_INPUT_ELEMENT_DESC {
         SemanticName: PSTR(b"COL\0".as_ptr() as _),
         SemanticIndex: 0,
-        Format: DXGI_FORMAT_R32G32B32A32_FLOAT,
+        Format: DXGI_FORMAT_R32G32B32_FLOAT,
         InputSlot: 0,
         AlignedByteOffset: D3D11_APPEND_ALIGNED_ELEMENT,
         InputSlotClass: D3D11_INPUT_PER_VERTEX_DATA,
@@ -239,10 +239,10 @@ unsafe fn WinMain()
     let mut psBlob = None;
     let mut errors = None;
 
-    D3DCompileFromFile("shaders.hlsl", null_mut(), None, "ps_main", "ps_5_0", 0, 0, &mut psBlob, &mut errors).unwrap();
+    D3DCompileFromFile("shaders.hlsl", null_mut(), None, "ps_main", "ps_5_0", 0, 0, &mut psBlob, &mut errors);
     if let Some(errors) = errors {
         println!("Failed to compile");
-        panic!("{:?}", PSTR(errors.GetBufferPointer() as *mut _ ));
+        panic!("{}", CString::from_raw(errors.GetBufferPointer() as *mut _ ).into_string().unwrap());
     }
     let psBlob = psBlob.unwrap();
 
@@ -358,7 +358,7 @@ unsafe fn WinMain()
 
         while PeekMessageA(&mut msg, None, 0, 0, PM_REMOVE).as_bool()
         {
-            if (msg.message == WM_KEYDOWN) { return  };
+            if msg.message == WM_KEYDOWN && msg.wParam == WPARAM(0x1B)/*VK_ESCAPE*/ { return  };
             DispatchMessageA(&msg);
         }
 
