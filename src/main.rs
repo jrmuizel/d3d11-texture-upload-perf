@@ -1,6 +1,6 @@
 use std::{ffi::CString, ops::Mul, ptr::null_mut};
 
-use windows::{Win32::{Foundation::{BOOL, HWND, LPARAM, LRESULT, PSTR, WPARAM}, Graphics::{Direct3D::{*, Fxc::D3DCompileFromFile}, Direct3D11::*, Dxgi::{*, Common::*}}, System::LibraryLoader::GetModuleHandleA, UI::WindowsAndMessaging::*}, core::Interface};
+use windows::{Win32::{Foundation::{BOOL, HWND, LPARAM, LRESULT, PSTR, RECT, WPARAM}, Graphics::{Direct3D::{*, Fxc::D3DCompileFromFile}, Direct3D11::*, Dxgi::{*, Common::*}}, System::LibraryLoader::GetModuleHandleA, UI::WindowsAndMessaging::*}, core::Interface};
 
 mod data;
 use data::*;
@@ -96,9 +96,25 @@ unsafe fn win_main()
     let atom = unsafe { RegisterClassExA(&wc) };
     assert_ne!(atom, 0);
 
-    let window = unsafe { 
-        CreateWindowExA(Default::default(), "RustWindowClass", "Sample", WS_POPUP | WS_MAXIMIZE | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, None, None, None, null_mut())
+
+    let size = (640, 480);
+    let mut window_rect = RECT {
+        left: 0,
+        top: 0,
+        right: size.0,
+        bottom: size.1,
     };
+    unsafe { AdjustWindowRect(&mut window_rect, WS_OVERLAPPEDWINDOW, false) };
+
+    let window = unsafe { 
+        CreateWindowExA(Default::default(), "RustWindowClass", "Sample", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+        window_rect.right - window_rect.left,
+        window_rect.bottom - window_rect.top,
+          None, None, None, null_mut())
+    };
+
+    unsafe { ShowWindow(window, SW_SHOW) };
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -322,8 +338,10 @@ unsafe fn win_main()
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     let mut texture_desc: D3D11_TEXTURE2D_DESC = Default::default();
-    texture_desc.Width              = TEXTURE_WIDTH;  // in data.h
-    texture_desc.Height             = TEXTURE_HEIGHT; // in data.h
+    let width = 400;
+    let height = 400;
+    texture_desc.Width              = width;  // in data.h
+    texture_desc.Height             = height; // in data.h
     texture_desc.MipLevels          = 1;
     texture_desc.ArraySize          = 1;
     texture_desc.Format             = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -332,12 +350,25 @@ unsafe fn win_main()
     texture_desc.BindFlags          = D3D11_BIND_SHADER_RESOURCE;
 
     let mut texture_data: D3D11_SUBRESOURCE_DATA = Default::default();
-    texture_data.pSysMem            = TEXTURE_DATA.as_ptr() as *mut _;
-    texture_data.SysMemPitch        = TEXTURE_WIDTH * 4; // 4 bytes per pixel
+
+    let mut data = vec![0; (width*height*4) as usize];
+    let mut rseed: u32 = 0;
+    let mut rand = || -> u32
+        {
+            rseed = rseed.wrapping_mul(1103515245).wrapping_add(12345);
+            rseed
+        };
+    for i in &mut data {
+        *i = rand() as u8;
+    }
+    
+
+    texture_data.pSysMem            = data.as_mut_ptr() as *mut _;
+    texture_data.SysMemPitch        = width * 4; // 4 bytes per pixel
 
     let texture = device.CreateTexture2D(&texture_desc, &texture_data).unwrap();
 
-    let texture_view = device.CreateShaderResourceView(texture, null_mut()).unwrap();
+    let texture_view = device.CreateShaderResourceView(&texture, null_mut()).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -405,6 +436,7 @@ unsafe fn win_main()
 
         ///////////////////////////////////////////////////////////////////////////////////////////
 
+        device_context.UpdateSubresource(&texture, 0, null_mut(), data.as_mut_ptr() as *mut _, width * 4, 1);
         device_context.ClearRenderTargetView(&frame_buffer_view, background_color.as_ptr());
         device_context.ClearDepthStencilView(&depth_buffer_view, D3D11_CLEAR_DEPTH.0 as u32, 1.0, 0);
 
