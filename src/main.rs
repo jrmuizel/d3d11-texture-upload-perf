@@ -338,8 +338,8 @@ unsafe fn win_main()
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     let mut texture_desc: D3D11_TEXTURE2D_DESC = Default::default();
-    let width = 8192;
-    let height = 4096;
+    let width = 256;
+    let height = 256;
     texture_desc.Width              = width;  // in data.h
     texture_desc.Height             = height; // in data.h
     texture_desc.MipLevels          = 1;
@@ -365,10 +365,17 @@ unsafe fn win_main()
 
     texture_data.pSysMem            = data.as_mut_ptr() as *mut _;
     texture_data.SysMemPitch        = width * 4; // 4 bytes per pixel
+    let num_textures = 100;
+    let mut textures = Vec::new();
 
-    let texture = device.CreateTexture2D(&texture_desc, &texture_data).unwrap();
 
-    let texture_view = device.CreateShaderResourceView(&texture, null_mut()).unwrap();
+    for _ in 0..num_textures {
+        let texture = device.CreateTexture2D(&texture_desc, &texture_data).unwrap();
+        let texture_view = device.CreateShaderResourceView(&texture, null_mut()).unwrap();
+
+        textures.push((texture, texture_view));
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -436,8 +443,9 @@ unsafe fn win_main()
 
         ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-        device_context.UpdateSubresource(&texture, 0, null_mut(), data.as_mut_ptr() as *mut _, width * 4, 1);
+        for texture in &textures {
+            device_context.UpdateSubresource(&texture.0, 0, null_mut(), data.as_mut_ptr() as *mut _, width * 4, 1);
+        }
         device_context.ClearRenderTargetView(&frame_buffer_view, background_color.as_ptr());
         device_context.ClearDepthStencilView(&depth_buffer_view, D3D11_CLEAR_DEPTH.0 as u32, 1.0, 0);
 
@@ -453,7 +461,7 @@ unsafe fn win_main()
         device_context.RSSetState(&rasterizer_state);
 
         device_context.PSSetShader(&pixelShader, null_mut(), 0);
-        device_context.PSSetShaderResources(0, 1, &Some(texture_view.clone()));
+        //device_context.PSSetShaderResources(0, 1, &Some(texture_view.clone()));
         device_context.PSSetSamplers(0, 1, &Some(sampler_state.clone()));
 
         device_context.OMSetRenderTargets(1, &Some(frame_buffer_view.clone()), &depth_buffer_view);

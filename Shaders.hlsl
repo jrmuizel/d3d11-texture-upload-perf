@@ -20,7 +20,7 @@ struct vs_out
     float4 color    : COL;
 };
 
-Texture2D    mytexture : register(t0);
+//Texture2D    mytexture : register(t0);
 SamplerState mysampler : register(s0);
 
 vs_out vs_main(vs_in input)
@@ -37,6 +37,7 @@ vs_out vs_main(vs_in input)
 }
 
 float4 ps_main(vs_out input) : SV_TARGET
-{
-    return mytexture.Sample(mysampler, input.texcoord) * input.color;
+{    return input.color;
+
+    //return mytexture.Sample(mysampler, input.texcoord) * input.color;
 }
