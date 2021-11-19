@@ -338,15 +338,15 @@ unsafe fn win_main()
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     let mut texture_desc: D3D11_TEXTURE2D_DESC = Default::default();
-    let width = 400;
-    let height = 400;
+    let width = 8192;
+    let height = 4096;
     texture_desc.Width              = width;  // in data.h
     texture_desc.Height             = height; // in data.h
     texture_desc.MipLevels          = 1;
     texture_desc.ArraySize          = 1;
     texture_desc.Format             = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     texture_desc.SampleDesc.Count   = 1;
-    texture_desc.Usage              = D3D11_USAGE_IMMUTABLE;
+    texture_desc.Usage              = D3D11_USAGE_DEFAULT;
     texture_desc.BindFlags          = D3D11_BIND_SHADER_RESOURCE;
 
     let mut texture_data: D3D11_SUBRESOURCE_DATA = Default::default();
@@ -407,12 +407,12 @@ unsafe fn win_main()
         let scale     = Matrix::new(model_scale.x, 0., 0., 0., 0., model_scale.y, 0., 0., 0., 0., model_scale.z, 0., 0., 0., 0., 1. );
         let translate = Matrix::new( 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., model_translation.x, model_translation.y, model_translation.z, 1. );
 
-        model_rotation.x += 0.005;
-        model_rotation.y += 0.009;
-        model_rotation.z += 0.001;
+        //model_rotation.x += 0.005;
+        model_rotation.y += 0.0009;
+        //model_rotation.z += 0.001;
 
         ///////////////////////////////////////////////////////////////////////////////////////////
-
+    
 
 
         let mapped_subresource = device_context.Map(&constant_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0).unwrap();
@@ -435,6 +435,7 @@ unsafe fn win_main()
         let viewport = D3D11_VIEWPORT{ TopLeftX: 0.0, TopLeftY: 0.0, Width: w, Height: h, MinDepth: 0.0, MaxDepth: 1.0 };
 
         ///////////////////////////////////////////////////////////////////////////////////////////
+
 
         device_context.UpdateSubresource(&texture, 0, null_mut(), data.as_mut_ptr() as *mut _, width * 4, 1);
         device_context.ClearRenderTargetView(&frame_buffer_view, background_color.as_ptr());
