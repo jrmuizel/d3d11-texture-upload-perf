@@ -118,7 +118,7 @@ unsafe fn win_main()
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    let feature_levels: D3D_FEATURE_LEVEL = D3D_FEATURE_LEVEL_11_0;
+    let feature_levels: D3D_FEATURE_LEVEL = D3D_FEATURE_LEVEL_10_0;
     
     let mut baseDevice = None;
     let mut baseDeviceContext = None;
@@ -138,6 +138,8 @@ unsafe fn win_main()
     let dxgi_device: IDXGIDevice1 = device.cast().unwrap();
 
     let dxgi_adapter = dxgi_device.GetAdapter().unwrap();
+    let desc = dxgi_adapter.GetDesc().unwrap();
+    println!("{:?}", String::from_utf16(&desc.Description));
 
     let dxgi_factory: IDXGIFactory2 = dxgi_adapter.GetParent().unwrap();
 
@@ -192,11 +194,12 @@ unsafe fn win_main()
     let mut vs_blob = None;
     let mut errors = None;
 
-    D3DCompileFromFile("shaders.hlsl", null_mut(), None, "vs_main", "vs_5_0", 0, 0, &mut vs_blob, &mut errors);
+    let ret = D3DCompileFromFile("shaders.hlsl", null_mut(), None, "vs_main", "vs_4_0", 0, 0, &mut vs_blob, &mut errors);
     if let Some(errors) = errors {
         println!("Failed to compile");
         panic!("{}", CString::from_raw(errors.GetBufferPointer() as *mut _ ).into_string().unwrap());
     }
+    ret.unwrap();
     let vs_blob = vs_blob.unwrap();
 
     let vertex_shader = device.CreateVertexShader(vs_blob.GetBufferPointer(), vs_blob.GetBufferSize(), None).unwrap();
@@ -255,7 +258,7 @@ unsafe fn win_main()
     let mut psBlob = None;
     let mut errors = None;
 
-    D3DCompileFromFile("shaders.hlsl", null_mut(), None, "ps_main", "ps_5_0", 0, 0, &mut psBlob, &mut errors);
+    D3DCompileFromFile("shaders.hlsl", null_mut(), None, "ps_main", "ps_4_0", 0, 0, &mut psBlob, &mut errors);
     if let Some(errors) = errors {
         println!("Failed to compile");
         panic!("{}", CString::from_raw(errors.GetBufferPointer() as *mut _ ).into_string().unwrap());
@@ -365,7 +368,7 @@ unsafe fn win_main()
 
     texture_data.pSysMem            = data.as_mut_ptr() as *mut _;
     texture_data.SysMemPitch        = width * 4; // 4 bytes per pixel
-    let num_textures = 100;
+    let num_textures = 1000;
     let mut textures = Vec::new();
 
 
