@@ -130,7 +130,7 @@ unsafe fn win_main()
     let mut baseDevice = None;
     let mut baseDeviceContext = None;
 
-    D3D11CreateDevice(None, D3D_DRIVER_TYPE_HARDWARE, None, D3D11_CREATE_DEVICE_BGRA_SUPPORT, &feature_levels, 1, D3D11_SDK_VERSION, &mut baseDevice, null_mut(), &mut baseDeviceContext);
+    D3D11CreateDevice(None, D3D_DRIVER_TYPE_HARDWARE, None, D3D11_CREATE_DEVICE_BGRA_SUPPORT, &feature_levels, 1, D3D11_SDK_VERSION, &mut baseDevice, null_mut(), &mut baseDeviceContext).unwrap();
     let base_device = baseDevice.unwrap();
     let base_device_context = baseDeviceContext.unwrap();
 
