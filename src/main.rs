@@ -146,7 +146,7 @@ unsafe fn win_main()
 
     let dxgi_adapter = dxgi_device.GetAdapter().unwrap();
     let desc = dxgi_adapter.GetDesc().unwrap();
-    println!("{:?}", String::from_utf16(&desc.Description));
+    println!("Adapter: {:?}", String::from_utf16(&desc.Description.split(|x| *x == 0).next().unwrap()).unwrap());
 
     let dxgi_factory: IDXGIFactory2 = dxgi_adapter.GetParent().unwrap();
 
