@@ -444,6 +444,7 @@ unsafe fn win_main()
                 device_context.UpdateSubresource(&texture.1, 0, null_mut(), data.as_mut_ptr() as *mut _, width * 4, 1);
             } else {
                 let mapped_subresource = device_context.Map(&texture.0, 0, D3D11_MAP_READ_WRITE, if wait { 0 } else { D3D11_MAP_FLAG_DO_NOT_WAIT.0 as u32});
+                // if the mapped resource is busy then use a second staging buffer
                 let (src, mapped_subresource) = match mapped_subresource {
                     Ok(mapped_subresource) => (&texture.0, mapped_subresource),
                     _ => (&texture.3, device_context.Map(&texture.3, 0, D3D11_MAP_READ_WRITE, 0).unwrap())
