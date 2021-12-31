@@ -1,3 +1,5 @@
+// Derived from https://gist.github.com/d7samurai/261c69490cce0620d0bfc93003cd1052
+
 use std::{ffi::CString, ops::Mul, ptr::null_mut, time::Instant, collections::VecDeque};
 
 use windows::{Win32::{Foundation::{BOOL, HWND, LPARAM, LRESULT, PSTR, RECT, WPARAM}, Graphics::{Direct3D::{*, Fxc::{D3DCompileFromFile, D3DCompile}}, Direct3D11::*, Dxgi::{*, Common::*}}, System::LibraryLoader::GetModuleHandleA, UI::WindowsAndMessaging::*}, core::Interface};
@@ -7,39 +9,6 @@ use data::*;
 fn main() {
     unsafe  {win_main();}
 }
-
-
-
-
-/*
-#pragma comment(lib, "user32")
-#pragma comment(lib, "d3d11")
-#pragma comment(lib, "d3dcompiler")
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-#include <windows.h>
-#include <d3d11_1.h>
-#include <d3dcompiler.h>
-#include <stdio.h>
-
-#include <math.h> // sin, cos for rotation
-
-#include "data.h" // example 3d model (the 'data.h' source file is provided below, along with 'shaders.hlsl')
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-#define TITLE "Minimal D3D11 by d7samurai"
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-struct float3 { float x, y, z; };
-struct matrix { float m[4][4]; };
-
-matrix operator*(matrix& m1, matrix& m2);
-*/
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 const SHADER_SOURCE: &[u8] = include_bytes!("shaders.hlsl");
 
@@ -386,7 +355,7 @@ unsafe fn win_main()
 
     texture_data.pSysMem            = data.as_mut_ptr() as *mut _;
     texture_data.SysMemPitch        = width * 4; // 4 bytes per pixel
-    let num_textures = 5; // 13 map, 11 nowait, 9 updatesubresource
+    let num_textures = 13; // 13 map, 11 nowait, 9 updatesubresource
 
     let wait = true;
     let update_subresource = true;
