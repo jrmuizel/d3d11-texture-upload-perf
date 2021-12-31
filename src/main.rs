@@ -122,8 +122,6 @@ unsafe fn win_main()
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
     let swap_chain_desc = DXGI_SWAP_CHAIN_DESC1 {
         BufferCount: 2,
         Width: 0, // use window width
@@ -138,8 +136,6 @@ unsafe fn win_main()
         ..Default::default()
     };
 
-
-
     let swap_chain = dxgi_factory.CreateSwapChainForHwnd(&device, window, &swap_chain_desc, std::ptr::null(), None).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,20 +143,14 @@ unsafe fn win_main()
 
 
     let frame_buffer: ID3D11Texture2D = swap_chain.GetBuffer(0).unwrap();
-
-
     let frame_buffer_view = device.CreateRenderTargetView(&frame_buffer, null_mut()).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     let mut depth_buffer_desc = Default::default();
-
     frame_buffer.GetDesc(&mut depth_buffer_desc); // base on framebuffer properties
-
     depth_buffer_desc.Format    = DXGI_FORMAT_D24_UNORM_S8_UINT;
     depth_buffer_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-
-
 
     let depth_buffer = device.CreateTexture2D(&depth_buffer_desc, null_mut()).unwrap();
     let depth_buffer_view = device.CreateDepthStencilView(depth_buffer, null_mut()).unwrap();
@@ -250,7 +240,6 @@ unsafe fn win_main()
     rasterizerDesc.FillMode = D3D11_FILL_SOLID;
     rasterizerDesc.CullMode = D3D11_CULL_BACK;
 
-
     let rasterizer_state = device.CreateRasterizerState1(&rasterizerDesc).unwrap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -261,7 +250,6 @@ unsafe fn win_main()
     samplerDesc.AddressV       = D3D11_TEXTURE_ADDRESS_WRAP;
     samplerDesc.AddressW       = D3D11_TEXTURE_ADDRESS_WRAP;
     samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-
 
     let sampler_state = device.CreateSamplerState(&samplerDesc).unwrap();
 
@@ -299,7 +287,6 @@ unsafe fn win_main()
     vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER.0;
 
     let vertex_data = D3D11_SUBRESOURCE_DATA{ pSysMem: VERTEX_DATA.as_ptr() as *mut _, ..Default::default() };
-
 
     let vertex_buffer = device.CreateBuffer(&vertexBufferDesc, &vertex_data).unwrap();
 
@@ -429,7 +416,6 @@ unsafe fn win_main()
         //model_rotation.z += 0.001;
 
         ///////////////////////////////////////////////////////////////////////////////////////////
-    
 
 
         let mapped_subresource = device_context.Map(&constant_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0).unwrap();
