@@ -1,4 +1,4 @@
-use std::{ffi::CString, ops::Mul, ptr::null_mut};
+use std::{ffi::CString, ops::Mul, ptr::null_mut, time::Instant, collections::VecDeque};
 
 use windows::{Win32::{Foundation::{BOOL, HWND, LPARAM, LRESULT, PSTR, RECT, WPARAM}, Graphics::{Direct3D::{*, Fxc::{D3DCompileFromFile, D3DCompile}}, Direct3D11::*, Dxgi::{*, Common::*}}, System::LibraryLoader::GetModuleHandleA, UI::WindowsAndMessaging::*}, core::Interface};
 
@@ -386,10 +386,28 @@ unsafe fn win_main()
 
     texture_data.pSysMem            = data.as_mut_ptr() as *mut _;
     texture_data.SysMemPitch        = width * 4; // 4 bytes per pixel
-    let num_textures = 110; // 13 map, 11 nowait, 9 updatesubresource
+    let num_textures = 5; // 13 map, 11 nowait, 9 updatesubresource
+
+    let wait = true;
+    let update_subresource = true;
+
+    let total_size = width * height * 4 * num_textures;
+    let target_ms = 16.;
+    println!("attempting to upload {}MB at {} GB/s", total_size as f32 / (1000.*1000.), (total_size as f32 / (1000.*1000. * 1000.)) / (target_ms * 1./(1000.)));
+    println!("using {} textures of {}x{}", num_textures, width, height);
+    let method = if update_subresource {
+        "UpdateSubresource"
+    } else {
+        if wait {
+            "Map"
+        } else {
+            "Map w/ D3D11_MAP_FLAG_DO_NOT_WAIT"
+        }
+    };
+    println!("via {}", method);
+
+
     let mut textures = Vec::new();
-
-
     for _ in 0..num_textures {
         let texture = device.CreateTexture2D(&texture_desc, null_mut()).unwrap();
         let staging = device.CreateTexture2D(&staging_desc, null_mut()).unwrap();
@@ -400,9 +418,6 @@ unsafe fn win_main()
         textures.push((staging, texture, texture_view, staging2));
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
     let w: f32 = depth_buffer_desc.Width as f32;  // width
     let h: f32 = depth_buffer_desc.Height as f32; // height
     let n: f32 = 1000.0;                                    // near
@@ -412,10 +427,10 @@ unsafe fn win_main()
     let model_scale= Float3       ::new( 400.0, 400.0, 400.0 );
     let model_translation= Float3::new( 0.0, 0.0, 1500.0 );
 
-    println!("attempting to upload {}MB at {} GB/s", (width * height * 4 * num_textures) as f32 / (1000.*1000.), ((width * height * 4 * num_textures) as f32 / (1000.*1000. * 1000.)) / (16. * 1./(1000.)));
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
+    let mut last = Instant::now();
+    let mut times = VecDeque::with_capacity(100);
     loop
     {
         let mut msg: MSG = Default::default();
@@ -468,8 +483,7 @@ unsafe fn win_main()
         let viewport = D3D11_VIEWPORT{ TopLeftX: 0.0, TopLeftY: 0.0, Width: w, Height: h, MinDepth: 0.0, MaxDepth: 1.0 };
 
         ///////////////////////////////////////////////////////////////////////////////////////////
-        let wait = false;
-        let update_subresource = true;
+
         for texture in &textures {
             if update_subresource {
                 device_context.UpdateSubresource(&texture.1, 0, null_mut(), data.as_mut_ptr() as *mut _, width * 4, 1);
@@ -514,6 +528,15 @@ unsafe fn win_main()
         ///////////////////////////////////////////////////////////////////////////////////////////
 
         swap_chain.Present(1, 0);
+        let now = Instant::now();
+        let elapsed_seconds = (now - last).as_secs_f32();
+        times.push_front(elapsed_seconds);
+        let total: f32 = times.iter().sum();
+        println!("Took {:.2}ms {:.2}GB/s avg {:.2} GB/s", elapsed_seconds * 1000., (total_size as f32 / (1000.*1000. * 1000.)) / elapsed_seconds, (total_size as f32 / (1000.*1000. * 1000.) * times.len() as f32) / total);
+        if times.len() >= 100 {
+            times.pop_back();
+        }
+        last = now;
     }
 }
 
