@@ -1,6 +1,6 @@
 use std::{ffi::CString, ops::Mul, ptr::null_mut};
 
-use windows::{Win32::{Foundation::{BOOL, HWND, LPARAM, LRESULT, PSTR, RECT, WPARAM}, Graphics::{Direct3D::{*, Fxc::D3DCompileFromFile}, Direct3D11::*, Dxgi::{*, Common::*}}, System::LibraryLoader::GetModuleHandleA, UI::WindowsAndMessaging::*}, core::Interface};
+use windows::{Win32::{Foundation::{BOOL, HWND, LPARAM, LRESULT, PSTR, RECT, WPARAM}, Graphics::{Direct3D::{*, Fxc::{D3DCompileFromFile, D3DCompile}}, Direct3D11::*, Dxgi::{*, Common::*}}, System::LibraryLoader::GetModuleHandleA, UI::WindowsAndMessaging::*}, core::Interface};
 
 mod data;
 use data::*;
@@ -39,6 +39,10 @@ struct matrix { float m[4][4]; };
 matrix operator*(matrix& m1, matrix& m2);
 */
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+const SHADER_SOURCE: &[u8] = include_bytes!("shaders.hlsl");
+
 struct Float3 {  x: f32, y: f32, z: f32 }
 
 impl Float3 {
@@ -197,7 +201,7 @@ unsafe fn win_main()
     let mut vs_blob = None;
     let mut errors = None;
 
-    let ret = D3DCompileFromFile("shaders.hlsl", null_mut(), None, "vs_main", "vs_4_0", 0, 0, &mut vs_blob, &mut errors);
+    let ret = D3DCompile(SHADER_SOURCE.as_ptr() as _, SHADER_SOURCE.len(), "shaders.hlsl", null_mut(), None, "vs_main", "vs_4_0", 0, 0, &mut vs_blob, &mut errors);
     if let Some(errors) = errors {
         println!("Failed to compile");
         panic!("{}", CString::from_raw(errors.GetBufferPointer() as *mut _ ).into_string().unwrap());
@@ -261,7 +265,7 @@ unsafe fn win_main()
     let mut psBlob = None;
     let mut errors = None;
 
-    D3DCompileFromFile("shaders.hlsl", null_mut(), None, "ps_main", "ps_4_0", 0, 0, &mut psBlob, &mut errors);
+    D3DCompile(SHADER_SOURCE.as_ptr() as _, SHADER_SOURCE.len(), "shaders.hlsl", null_mut(), None, "ps_main", "ps_4_0", 0, 0, &mut psBlob, &mut errors);
     if let Some(errors) = errors {
         println!("Failed to compile");
         panic!("{}", CString::from_raw(errors.GetBufferPointer() as *mut _ ).into_string().unwrap());
