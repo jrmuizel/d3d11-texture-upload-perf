@@ -8,6 +8,9 @@ fn main() {
     unsafe  {win_main();}
 }
 
+
+
+
 /*
 #pragma comment(lib, "user32")
 #pragma comment(lib, "d3d11")
@@ -341,16 +344,27 @@ unsafe fn win_main()
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     let mut texture_desc: D3D11_TEXTURE2D_DESC = Default::default();
-    let width = 256;
-    let height = 256;
+    let width = 2048;
+    let height = 2048;
     texture_desc.Width              = width;  // in data.h
     texture_desc.Height             = height; // in data.h
     texture_desc.MipLevels          = 1;
     texture_desc.ArraySize          = 1;
-    texture_desc.Format             = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    texture_desc.Format             = DXGI_FORMAT_R8G8B8A8_UNORM;
     texture_desc.SampleDesc.Count   = 1;
     texture_desc.Usage              = D3D11_USAGE_DEFAULT;
     texture_desc.BindFlags          = D3D11_BIND_SHADER_RESOURCE;
+
+    let mut staging_desc: D3D11_TEXTURE2D_DESC = Default::default();
+    staging_desc.Width              = width;  // in data.h
+    staging_desc.Height             = height; // in data.h
+    staging_desc.MipLevels          = 1;
+    staging_desc.ArraySize          = 1;
+    staging_desc.Format             = DXGI_FORMAT_R8G8B8A8_UNORM;
+    staging_desc.SampleDesc.Count   = 1;
+    staging_desc.Usage              = D3D11_USAGE_STAGING;
+    staging_desc.BindFlags          = D3D11_BIND_FLAG(0);
+    staging_desc.CPUAccessFlags     = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
 
     let mut texture_data: D3D11_SUBRESOURCE_DATA = Default::default();
 
@@ -368,15 +382,18 @@ unsafe fn win_main()
 
     texture_data.pSysMem            = data.as_mut_ptr() as *mut _;
     texture_data.SysMemPitch        = width * 4; // 4 bytes per pixel
-    let num_textures = 1000;
+    let num_textures = 110; // 13 map, 11 nowait, 9 updatesubresource
     let mut textures = Vec::new();
 
 
     for _ in 0..num_textures {
-        let texture = device.CreateTexture2D(&texture_desc, &texture_data).unwrap();
+        let texture = device.CreateTexture2D(&texture_desc, null_mut()).unwrap();
+        let staging = device.CreateTexture2D(&staging_desc, null_mut()).unwrap();
+        let staging2 = device.CreateTexture2D(&staging_desc, null_mut()).unwrap();
+
         let texture_view = device.CreateShaderResourceView(&texture, null_mut()).unwrap();
 
-        textures.push((texture, texture_view));
+        textures.push((staging, texture, texture_view, staging2));
     }
 
 
@@ -390,6 +407,8 @@ unsafe fn win_main()
     let mut model_rotation= Float3    ::new(0.0, 0.0, 0.0 );
     let model_scale= Float3       ::new( 400.0, 400.0, 400.0 );
     let model_translation= Float3::new( 0.0, 0.0, 1500.0 );
+
+    println!("attempting to upload {}MB at {} GB/s", (width * height * 4 * num_textures) as f32 / (1000.*1000.), ((width * height * 4 * num_textures) as f32 / (1000.*1000. * 1000.)) / (16. * 1./(1000.)));
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -445,9 +464,22 @@ unsafe fn win_main()
         let viewport = D3D11_VIEWPORT{ TopLeftX: 0.0, TopLeftY: 0.0, Width: w, Height: h, MinDepth: 0.0, MaxDepth: 1.0 };
 
         ///////////////////////////////////////////////////////////////////////////////////////////
-
+        let wait = false;
+        let update_subresource = true;
         for texture in &textures {
-            device_context.UpdateSubresource(&texture.0, 0, null_mut(), data.as_mut_ptr() as *mut _, width * 4, 1);
+            if update_subresource {
+                device_context.UpdateSubresource(&texture.1, 0, null_mut(), data.as_mut_ptr() as *mut _, width * 4, 1);
+            } else {
+                let mapped_subresource = device_context.Map(&texture.0, 0, D3D11_MAP_READ_WRITE, if wait { 0 } else { D3D11_MAP_FLAG_DO_NOT_WAIT.0 as u32});
+                let (src, mapped_subresource) = match mapped_subresource {
+                    Ok(mapped_subresource) => (&texture.0, mapped_subresource),
+                    _ => (&texture.3, device_context.Map(&texture.3, 0, D3D11_MAP_READ_WRITE, 0).unwrap())
+                };
+                std::ptr::copy_nonoverlapping(data.as_ptr(),mapped_subresource.pData as *mut _, data.len());
+                device_context.Unmap(src, 0);
+                device_context.CopySubresourceRegion(&texture.1, 0, 0, 0, 0, src, 0, null_mut());
+            }
+
         }
         device_context.ClearRenderTargetView(&frame_buffer_view, background_color.as_ptr());
         device_context.ClearDepthStencilView(&depth_buffer_view, D3D11_CLEAR_DEPTH.0 as u32, 1.0, 0);
