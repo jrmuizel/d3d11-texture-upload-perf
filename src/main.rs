@@ -405,11 +405,11 @@ unsafe fn win_main()
         }
         ///////////////////////////////////////////////////////////////////////////////////////////
 
-        let rotate_x = Matrix::new( 1., 0., 0., 0., 0., cos(model_rotation.x), -(sin(model_rotation.x)), 0., 0., sin(model_rotation.x), cos(model_rotation.x), 0., 0., 0., 0., 1. );
-        let rotate_y = Matrix::new( cos(model_rotation.y), 0., sin(model_rotation.y), 0., 0., 1., 0., 0., -(sin(model_rotation.y)), 0., cos(model_rotation.y), 0., 0., 0., 0., 1. );
-        let rotate_z   = Matrix::new(cos(model_rotation.z), -(sin(model_rotation.z)), 0., 0., sin(model_rotation.z), cos(model_rotation.z), 0., 0., 0., 0., 1., 0., 0., 0., 0., 1. );
+        let rotate_x  = Matrix::new(1., 0., 0., 0., 0., cos(model_rotation.x), -(sin(model_rotation.x)), 0., 0., sin(model_rotation.x), cos(model_rotation.x), 0., 0., 0., 0., 1.);
+        let rotate_y  = Matrix::new(cos(model_rotation.y), 0., sin(model_rotation.y), 0., 0., 1., 0., 0., -(sin(model_rotation.y)), 0., cos(model_rotation.y), 0., 0., 0., 0., 1.);
+        let rotate_z  = Matrix::new(cos(model_rotation.z), -(sin(model_rotation.z)), 0., 0., sin(model_rotation.z), cos(model_rotation.z), 0., 0., 0., 0., 1., 0., 0., 0., 0., 1.);
         let scale     = Matrix::new(model_scale.x, 0., 0., 0., 0., model_scale.y, 0., 0., 0., 0., model_scale.z, 0., 0., 0., 0., 1. );
-        let translate = Matrix::new( 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., model_translation.x, model_translation.y, model_translation.z, 1. );
+        let translate = Matrix::new(1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., model_translation.x, model_translation.y, model_translation.z, 1.);
 
         //model_rotation.x += 0.005;
         model_rotation.y += 0.0009;
