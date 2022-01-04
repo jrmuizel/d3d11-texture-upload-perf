@@ -344,8 +344,17 @@ unsafe fn win_main()
     texture_data.SysMemPitch        = width * 4; // 4 bytes per pixel
     let num_textures = 13; // 13 map, 11 nowait, 9 updatesubresource
 
-    let wait = true;
-    let update_subresource = true;
+    let mut wait = true;
+    let mut update_subresource = true;
+
+    if let Some(method) = std::env::args().nth(1) {
+        match method.as_str() {
+            "UpdateSubresource" => update_subresource = true,
+            "Map" => { update_subresource = false; wait = true; }
+            "MapNoWait" => { update_subresource = false; wait = false; }
+            _ => panic!("Unknown method. Try: UpdateSubresource, Map, MapNoWait")
+        }
+    };
 
     let total_size = width * height * 4 * num_textures;
     let target_ms = 16.;
